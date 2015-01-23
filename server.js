@@ -20,8 +20,10 @@
 
 // includes
 var restify = require("restify");
-var XMLHttpRequest = require("xhr2");	// todo: this cheats to make the client-designed jsfs library work
 var jsfs = require("./jsos_jsfs.js");
+
+// config
+var JSFS_SERVER = "http://localhost:7302";
 
 // simple logging
 var log = {
@@ -35,6 +37,9 @@ var log = {
                 }
         }
 };
+
+// init JSFS connection
+jsfs_server = jsfs.connect(JSFS_SERVER);
 
 // configure REST server
 var server = restify.createServer();
@@ -66,8 +71,18 @@ function submissions_list(req, res, next){
 	log.message(log.INFO, "got submissions_list");
 	
 	// todo: return submission index
+	jsfs_server.load_object("/submissions/submission_index.json", function(obj){
+		
+		if(obj){
+			res.send(obj);
+		} else {
+			res.send(500, "error reading submissions list");
+		}
+		
+		return next;
+	});
 	
-	return next;
+	//return next;
 }
 
 function create_submission(req, res, next){
