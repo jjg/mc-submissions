@@ -1,0 +1,13 @@
+{
+    "juror": {
+        "name": "",
+        "email": "",
+        "password": "",
+        "keys": [
+            {
+                "url": "",
+                "key": ""
+            }
+        ]
+    }
+}

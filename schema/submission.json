@@ -1,0 +1,29 @@
+{
+    "submission": {
+        "submitter_name": "",
+        "submitter_email": "",
+        "submission_date": "",
+        "artist": {
+            "bio": "",
+            "name": "",
+            "youtube_url": "",
+            "social_media_url": "",
+            "website_url": ""
+        },
+        "album": {
+            "album_title": "",
+            "release_date": "",
+            "record_label": "",
+            "upc": "",
+            "tracks": [
+                {
+                    "track_title": "",
+                    "main_artist": "",
+                    "filename": "",
+                    "url": "",
+                    "access_token": ""
+                }
+            ]
+        }
+    }
+}
