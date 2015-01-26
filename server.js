@@ -70,31 +70,45 @@ server.on('MethodNotAllowed', unknownMethodHandler);
 function submissions_list(req, res, next){
 	log.message(log.INFO, "got submissions_list");
 	
-	// todo: return submission index
+	// return submission index
 	jsfs_server.load_object("/submissions/submission_index.json", function(obj){
-		
 		if(obj){
 			res.send(obj);
 		} else {
 			res.send(500, "error reading submissions list");
 		}
-		
 		return next;
 	});
-	
-	//return next;
 }
 
 function create_submission(req, res, next){
 	log.message(log.INFO, "got create_submission");
 	
-	// todo: store submission in JSFS
-	
-	// todo: update submission index
-	
-	// todo: return submission access_token
-	
-	return next;
+	// store submission in JSFS
+	var submission = JSON.parse(req.body.submission);
+	jsfs_server.store_object(submission, "/submissions/" + submission.slug, true, false, function(submission_store_result){
+		if(submission_store_result.success){
+			// update submission index
+			jsfs_server.load_object("/submissions/submission_index.json", function(obj){
+				if(obj){
+					var submission_idx_entry = {"url":submission_store_result.url,"access_token":submission_store_result.access_token};
+					obj.submissions.push(submission_idx_entry);
+					// update stored index
+					jsfs_server.store_object(obj, "", true, false, function(idx_store_result){
+						// return submission storage result
+						res.send(submission_store_result);
+						return next;
+					});
+				} else {
+					res.send(500, "error updating submission index");
+					return next;
+				}
+			});
+		} else {
+			res.send(500, "error storing submission");
+			return next;
+		}
+	});
 }
 
 function update_submission(req, res, next){
