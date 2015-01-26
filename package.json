@@ -3,6 +3,7 @@
 	"version":"1.0.0",
 	"dependencies":{
 		"restify":"*",
-		"xhr2":"*"
+		"xhr2":"*",
+		"redis-url":"*"
 	}
 }

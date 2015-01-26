@@ -20,10 +20,12 @@
 
 // includes
 var restify = require("restify");
-var jsfs = require("./jsos_jsfs.js");
+//var jsfs = require("./jsos_jsfs.js");
+var redis_url = process.env.REDISTOGO_URL || 'redis://localhost:6379';
+var redis = require('redis-url').connect(redis_url);
 
 // config
-var JSFS_SERVER = "http://localhost:7302";
+//var JSFS_SERVER = "http://localhost:7302";
 
 // simple logging
 var log = {
@@ -39,7 +41,7 @@ var log = {
 };
 
 // init JSFS connection
-jsfs_server = jsfs.connect(JSFS_SERVER);
+//jsfs_server = jsfs.connect(JSFS_SERVER);
 
 // configure REST server
 var server = restify.createServer();
@@ -70,7 +72,28 @@ server.on('MethodNotAllowed', unknownMethodHandler);
 function submissions_list(req, res, next){
 	log.message(log.INFO, "got submissions_list");
 	
-	// return submission index
+	// return submission index from REDIS
+	var submissions = [];
+	redis.smembers("submissions", function(err, value){
+		
+		if(err){
+			log.message(log.ERROR,err);
+			res.send(500,err);
+			return next;
+		}
+
+		log.message(log.INFO,value);
+
+		for(var i=0;i<value.length;i++){
+			submissions.push(value[i]);
+		}
+
+		res.send(submissions);
+		return next;
+	});
+
+	/*
+	// return submission index from JSFS
 	jsfs_server.load_object("/submissions/submission_index.json", function(obj){
 		if(obj){
 			res.send(obj);
@@ -79,11 +102,61 @@ function submissions_list(req, res, next){
 		}
 		return next;
 	});
+	*/
+}
+
+function get_submission(req, res, next){
+	log.message(log.INFO, "got get_submission");
+	log.message(log.INFO,req.params.slug);
+
+	redis.get("submission:" + req.params.slug, function(err, value){
+
+		if(err){
+			log.message(log.ERROR, err);
+			res.send(500,err);
+			return next;
+		}
+
+		log.message(log.INFO,value);
+
+		res.send(JSON.parse(value));
+		return next;
+	});
 }
 
 function create_submission(req, res, next){
 	log.message(log.INFO, "got create_submission");
-	
+	log.message(log.INFO,JSON.stringify(req.body.submission));
+
+	// store submission in REDIS
+	var submission = req.body.submission;
+	redis.set("submission:" + submission.slug, JSON.stringify(submission), function(err, value){
+
+		if(err){
+			log.message(log.ERROR,err);
+			res.send(500,err);
+			return next;
+		}
+
+		log.message(log.INFO,value);
+
+		// add submission to submission index
+		redis.sadd("submissions", submission.slug, function(err, value){
+
+			if(err){
+				log.message(log.ERROR,err);
+				res.send(500,err);
+				return next;
+			}
+
+			log.message(log.INFO,value);
+
+			res.send(value);
+			return next;
+		});
+	});
+
+	/*	
 	// store submission in JSFS
 	var submission = JSON.parse(req.body.submission);
 	jsfs_server.store_object(submission, "/submissions/" + submission.slug, true, false, function(submission_store_result){
@@ -109,6 +182,7 @@ function create_submission(req, res, next){
 			return next;
 		}
 	});
+	*/
 }
 
 function update_submission(req, res, next){
@@ -211,6 +285,7 @@ function remove_review(req, res, next){
 server.get({path:"/submissions",version:"1.0.0"}, submissions_list);
 server.post({path:"/submissions", version: "1.0.0"}, create_submission);
 server.put({path:"/submissions", version: "1.0.0"}, update_submission);
+server.get({path:"/submissions/:slug", version: "1.0.0"}, get_submission);
 //server.delete({path:"/submissions", version: "1.0.0"}, remove_submission);
 
 server.get({path:"/jurors",version:"1.0.0"}, jurors_list);
