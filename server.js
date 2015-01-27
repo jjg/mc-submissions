@@ -151,7 +151,7 @@ function create_submission(req, res, next){
 
 			log.message(log.INFO,value);
 
-			res.send(value);
+			res.send(200,value);
 			return next;
 		});
 	});
