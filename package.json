@@ -4,6 +4,7 @@
 	"dependencies":{
 		"restify":"*",
 		"xhr2":"*",
-		"redis-url":"*"
+		"redis-url":"*",
+		"nodemailer":"0.7"
 	}
 }
