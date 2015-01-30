@@ -21,8 +21,9 @@
 // includes
 var restify = require("restify");
 //var jsfs = require("./jsos_jsfs.js");
-var redis_url = process.env.REDISTOGO_URL || 'redis://localhost:6379';
-var redis = require('redis-url').connect(redis_url);
+var redis_url = process.env.REDIS_URL || 'redis://localhost:6379';
+var redis = require("redis-url").connect(redis_url);
+var nodemailer = require("nodemailer");
 
 // config
 //var JSFS_SERVER = "http://localhost:7302";
@@ -62,13 +63,22 @@ function unknownMethodHandler(req, res) {
         return res.send(204);
     } else {
         // debug, log methods we don't handle explicitly
-        console.log(req.method.toLowerCase);
+        log.message(log.WARN,req.method.toLowerCase);
         return res.send(new restify.MethodNotAllowedError());
     }
 }
 server.on('MethodNotAllowed', unknownMethodHandler);
 
 // service endpoint handlers
+function genres_list(req, res, next){
+	log.message(log.INFO, "got genres_list");
+
+	var genres = ["Blues","Classical","Country","Dance & Electronic","Folk","Instrumental","Jazz","Pop","Rap & Hip Hop","Rock","Spiritual"];
+
+	res.send(genres);
+	return next;
+}
+
 function submissions_list(req, res, next){
 	log.message(log.INFO, "got submissions_list");
 	
@@ -150,6 +160,20 @@ function create_submission(req, res, next){
 			}
 
 			log.message(log.INFO,value);
+
+			// todo: this notification should be sent by the client, but for now
+			// its hard-coded for now
+			//var recipient = "";
+			//var subject = "";
+			//var message = "";
+			// todo: enable once we have the credentials
+			//send_email(recipient, subject, message);
+
+  		var recipient = submission.submitter_email;
+  		var subject = "Capital City Records submission confirmed!";
+  		var message = "<p><p>Hello,<p>Thanks for your submission to Capital City Records. Your tracks and information have been uploaded for jury review.<p>We will follow up with you a few weeks after the submission period closes. For more information about Capital City Records see our FAQ at <a href=http://www.capitalcityrecords.ca/about>http://www.capitalcityrecords.ca/about</a><p>Thanks much,<br>Capital City Records<br><br>--&nbsp;<br>http://capitalcityrecords.ca/<br>localmusic@epl.ca";
+
+  		send_email(recipient, subject, message);
 
 			res.send(200,value);
 			return next;
@@ -281,6 +305,84 @@ function remove_review(req, res, next){
 	return next;
 }
 
+function send_notification(req, res, next){
+	log.message(log.INFO, "got send_notification");
+
+	var notification = req.body.notification;
+
+  var recipient = notification.recipient;
+  var subject = notification.subject;
+  var message = notification.message;
+
+	send_email(recipient, subject, message);
+
+	res.send(200);
+	return next;
+
+};
+
+function send_test_notification(req, res, next){
+  log.message(log.INFO, "got send_notification");
+
+  var notification = req.body.notification;
+
+  var recipient = notification.recipient;
+  var subject = "Capital City Records submission confirmed!"; 
+  var message = "<p><p>Hello,<p>Thanks for your submission to Capital City Records. Your tracks and information have been uploaded for jury review.<p>We will follow up with you a few weeks after the submission period closes. For more information about Capital City Records see our FAQ at <a href=http://www.capitalcityrecords.ca/about>http://www.capitalcityrecords.ca/about</a><p>Thanks much,<br>Capital City Records<br><br>--&nbsp;<br>http://capitalcityrecords.ca/<br>localmusic@epl.ca";
+
+  send_email(recipient, subject, message);
+
+  res.send(200);
+  return next;
+
+};
+
+// todo: temp email config, externalize soon
+var NOTIFICATION_SOURCE_EMAIL = "Capital City Records <localmusic@epl.ca>";
+var MAIL_USER = "";
+var MAIL_PASSWORD = "";
+var MAIL_SERVICE = "Gmail";
+
+function send_email(recipient, subject, message){
+
+	// create mail transport
+	var smtpTransport = nodemailer.createTransport("SMTP",{
+		//service: MAIL_SERVICE,
+		//from: NOTIFICATION_SOURCE_EMAIL,
+		//replyTo: NOTIFICATION_SOURCE_EMAIL,
+		host: "smtp-relay.gmail.com",
+		secureConnection: true,
+		port: 465,
+		auth: {
+			user: MAIL_USER,
+			pass: MAIL_PASSWORD
+		}
+	});
+
+	// create mail message
+	var mailOptions = {
+		from: NOTIFICATION_SOURCE_EMAIL,
+		to: recipient,
+		envelope:{
+			from: "Capital City Records <localmusic@epl.ca>",
+			to: recipient + ", <" + recipient + ">"
+		},
+		subject: subject,
+		html: message
+	};
+
+	// send message & tear-down transport
+	smtpTransport.sendMail(mailOptions, function(error, response){
+		if(error){
+			log.message(log.ERROR,error);
+		}else{
+			log.message(log.INFO,"notification sent: " + message);
+		}
+
+		smtpTransport.close();
+	});
+}
+
 // REST interface endpoints
 server.get({path:"/submissions",version:"1.0.0"}, submissions_list);
 server.post({path:"/submissions", version: "1.0.0"}, create_submission);
@@ -297,6 +399,11 @@ server.get({path:"/reviews",version:"1.0.0"}, reviews_list);
 server.post({path:"/reviews", version: "1.0.0"}, create_review);
 server.put({path:"/reviews", version: "1.0.0"}, update_review);
 //server.delete({path:"/reviews", version: "1.0.0"}, remove_review);
+
+server.post({path:"/testnotification",version:"1.0.0"}, send_test_notification);
+//server.post({path:"/notifications",version:"1.0.0"}, send_notification);
+
+server.get({path:"/genres",version:"1.0.0"}, genres_list);
 
 // static content
 server.get(/\/debug\/?.*/, restify.serveStatic({
