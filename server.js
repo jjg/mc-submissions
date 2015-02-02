@@ -26,7 +26,7 @@ var redis = require("redis-url").connect(redis_url);
 var nodemailer = require("nodemailer");
 
 // config
-//var JSFS_SERVER = "http://localhost:7302";
+var config = require('./config.js');
 
 // simple logging
 var log = {
@@ -171,7 +171,15 @@ function create_submission(req, res, next){
 
   		var recipient = submission.submitter_email;
   		var subject = "Capital City Records submission confirmed!";
+			var message = "<h3>Thanks!</h3>"  
+				+ "<p>Your submission has been uploaded to Capital City Records for jury review. We will email you a few weeks after the submission period closes to let you know if your album will be included in the collection. If your album is accepted you will have an opportunity to review and change the information you have submitted and youâll be asked to sign the <a href=\"https://docs.google.com/file/d/0B56HcVGi1B3ncEk4SGxoVGdlU0U\">license agreement</a>." 
+				+ "</p>"
+				+ "<p>"
+				+ "For more information see <a href=\"http://capitalcityrecords.ca/about\">our FAQs</a> or contact <a href=\"mailto:localmusic@epl.ca\">localmusic@epl.ca</a>"
+				+ "</p>";
+			/*
   		var message = "<p><p>Hello,<p>Thanks for your submission to Capital City Records. Your tracks and information have been uploaded for jury review.<p>We will follow up with you a few weeks after the submission period closes. For more information about Capital City Records see our FAQ at <a href=http://www.capitalcityrecords.ca/about>http://www.capitalcityrecords.ca/about</a><p>Thanks much,<br>Capital City Records<br><br>--&nbsp;<br>http://capitalcityrecords.ca/<br>localmusic@epl.ca";
+			*/
 
   		send_email(recipient, subject, message);
 
@@ -337,34 +345,28 @@ function send_test_notification(req, res, next){
 
 };
 
-// todo: temp email config, externalize soon
-var NOTIFICATION_SOURCE_EMAIL = "Capital City Records <localmusic@epl.ca>";
-var MAIL_USER = "";
-var MAIL_PASSWORD = "";
-var MAIL_SERVICE = "Gmail";
-
 function send_email(recipient, subject, message){
 
 	// create mail transport
 	var smtpTransport = nodemailer.createTransport("SMTP",{
-		//service: MAIL_SERVICE,
-		//from: NOTIFICATION_SOURCE_EMAIL,
-		//replyTo: NOTIFICATION_SOURCE_EMAIL,
-		host: "smtp-relay.gmail.com",
+		//service: config.MAIL_SERVICE,
+		//from: config.NOTIFICATION_SOURCE_EMAIL,
+		//replyTo: config.NOTIFICATION_SOURCE_EMAIL,
+		host: config.MAIL_HOST,
 		secureConnection: true,
 		port: 465,
 		auth: {
-			user: MAIL_USER,
-			pass: MAIL_PASSWORD
+			user: config.MAIL_USER,
+			pass: config.MAIL_PASSWORD
 		}
 	});
 
 	// create mail message
 	var mailOptions = {
-		from: NOTIFICATION_SOURCE_EMAIL,
+		from: config.NOTIFICATION_SOURCE_EMAIL,
 		to: recipient,
 		envelope:{
-			from: "Capital City Records <localmusic@epl.ca>",
+			from: config.MAIL_FROM,
 			to: recipient + ", <" + recipient + ">"
 		},
 		subject: subject,
@@ -400,7 +402,7 @@ server.post({path:"/reviews", version: "1.0.0"}, create_review);
 server.put({path:"/reviews", version: "1.0.0"}, update_review);
 //server.delete({path:"/reviews", version: "1.0.0"}, remove_review);
 
-server.post({path:"/testnotification",version:"1.0.0"}, send_test_notification);
+//server.post({path:"/testnotification",version:"1.0.0"}, send_test_notification);
 //server.post({path:"/notifications",version:"1.0.0"}, send_notification);
 
 server.get({path:"/genres",version:"1.0.0"}, genres_list);
