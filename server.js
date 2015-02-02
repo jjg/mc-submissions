@@ -20,12 +20,11 @@
 
 // includes
 var restify = require("restify");
-var redis_url = process.env.REDIS_URL || 'redis://localhost:6379';
-var redis = require("redis-url").connect(redis_url);
 var nodemailer = require("nodemailer");
 
-// load config
+// configure
 var config = require('./config.js');
+var redis = require("redis-url").connect(config.redis_url);
 
 // simple logging
 var log = {

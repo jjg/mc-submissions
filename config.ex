@@ -1,4 +1,5 @@
 module.exports = {
+	REDIS_URL: "",
 	NOTIFICATION_SOURCE_EMAIL: "",
 	MAIL_USER: "",
 	MAIL_PASSWORD: "",
