@@ -172,11 +172,13 @@ function create_submission(req, res, next){
   		var recipient = submission.submitter_email;
   		var subject = "Capital City Records submission confirmed!";
 			var message = "<h3>Thanks!</h3>"  
-				+ "<p>Your submission has been uploaded to Capital City Records for jury review. We will email you a few weeks after the submission period closes to let you know if your album will be included in the collection. If your album is accepted you will have an opportunity to review and change the information you have submitted and youâll be asked to sign the <a href=\"https://docs.google.com/file/d/0B56HcVGi1B3ncEk4SGxoVGdlU0U\">license agreement</a>." 
+				+ "<p>Your submission has been uploaded to Capital City Records for jury review. We will email you a few weeks after the submission period closes to let you know if your album will be included in the collection. If your album is accepted you will have an opportunity to review and change the information you have submitted and you\'ll be asked to sign the <a href=\"https://docs.google.com/file/d/0B56HcVGi1B3ncEk4SGxoVGdlU0U\">license agreement</a>." 
 				+ "</p>"
 				+ "<p>"
 				+ "For more information see <a href=\"http://capitalcityrecords.ca/about\">our FAQs</a> or contact <a href=\"mailto:localmusic@epl.ca\">localmusic@epl.ca</a>"
-				+ "</p>";
+				+ "</p>"
+				+ "<p>Thanks much,<br>Capital City Records"
+				+ "<br><br>--&nbsp;<br>http://capitalcityrecords.ca/<br>localmusic@epl.ca";
 			/*
   		var message = "<p><p>Hello,<p>Thanks for your submission to Capital City Records. Your tracks and information have been uploaded for jury review.<p>We will follow up with you a few weeks after the submission period closes. For more information about Capital City Records see our FAQ at <a href=http://www.capitalcityrecords.ca/about>http://www.capitalcityrecords.ca/about</a><p>Thanks much,<br>Capital City Records<br><br>--&nbsp;<br>http://capitalcityrecords.ca/<br>localmusic@epl.ca";
 			*/
