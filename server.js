@@ -20,13 +20,11 @@
 
 // includes
 var restify = require("restify");
-//var jsfs = require("./jsos_jsfs.js");
-var redis_url = process.env.REDIS_URL || 'redis://localhost:6379';
-var redis = require("redis-url").connect(redis_url);
 var nodemailer = require("nodemailer");
 
-// config
+// configure
 var config = require('./config.js');
+var redis = require("redis-url").connect(config.redis_url);
 
 // simple logging
 var log = {
@@ -40,9 +38,6 @@ var log = {
                 }
         }
 };
-
-// init JSFS connection
-//jsfs_server = jsfs.connect(JSFS_SERVER);
 
 // configure REST server
 var server = restify.createServer();
@@ -101,18 +96,6 @@ function submissions_list(req, res, next){
 		res.send(submissions);
 		return next;
 	});
-
-	/*
-	// return submission index from JSFS
-	jsfs_server.load_object("/submissions/submission_index.json", function(obj){
-		if(obj){
-			res.send(obj);
-		} else {
-			res.send(500, "error reading submissions list");
-		}
-		return next;
-	});
-	*/
 }
 
 function get_submission(req, res, next){
@@ -163,14 +146,8 @@ function create_submission(req, res, next){
 
 			// todo: this notification should be sent by the client, but for now
 			// its hard-coded for now
-			//var recipient = "";
-			//var subject = "";
-			//var message = "";
-			// todo: enable once we have the credentials
-			//send_email(recipient, subject, message);
-
-  		var recipient = submission.submitter_email;
-  		var subject = "Capital City Records submission confirmed!";
+			var recipient = submission.submitter_email;
+			var subject = "Capital City Records submission confirmed!";
 			var message = "<h3>Thanks!</h3>"  
 				+ "<p>Your submission has been uploaded to Capital City Records for jury review. We will email you a few weeks after the submission period closes to let you know if your album will be included in the collection. If your album is accepted you will have an opportunity to review and change the information you have submitted and you\'ll be asked to sign the <a href=\"https://docs.google.com/file/d/0B56HcVGi1B3ncEk4SGxoVGdlU0U\">license agreement</a>." 
 				+ "</p>"
@@ -183,46 +160,18 @@ function create_submission(req, res, next){
   		var message = "<p><p>Hello,<p>Thanks for your submission to Capital City Records. Your tracks and information have been uploaded for jury review.<p>We will follow up with you a few weeks after the submission period closes. For more information about Capital City Records see our FAQ at <a href=http://www.capitalcityrecords.ca/about>http://www.capitalcityrecords.ca/about</a><p>Thanks much,<br>Capital City Records<br><br>--&nbsp;<br>http://capitalcityrecords.ca/<br>localmusic@epl.ca";
 			*/
 
-  		send_email(recipient, subject, message);
+			send_email(recipient, subject, message);
 
 			res.send(200,value);
 			return next;
 		});
 	});
-
-	/*	
-	// store submission in JSFS
-	var submission = JSON.parse(req.body.submission);
-	jsfs_server.store_object(submission, "/submissions/" + submission.slug, true, false, function(submission_store_result){
-		if(submission_store_result.success){
-			// update submission index
-			jsfs_server.load_object("/submissions/submission_index.json", function(obj){
-				if(obj){
-					var submission_idx_entry = {"url":submission_store_result.url,"access_token":submission_store_result.access_token};
-					obj.submissions.push(submission_idx_entry);
-					// update stored index
-					jsfs_server.store_object(obj, "", true, false, function(idx_store_result){
-						// return submission storage result
-						res.send(submission_store_result);
-						return next;
-					});
-				} else {
-					res.send(500, "error updating submission index");
-					return next;
-				}
-			});
-		} else {
-			res.send(500, "error storing submission");
-			return next;
-		}
-	});
-	*/
 }
 
 function update_submission(req, res, next){
 	log.message(log.INFO, "got update_submission");
 	
-	// todo: store updated submission in JSFS
+	// todo: store updated submission
 	
 	return next;
 }
@@ -230,7 +179,7 @@ function update_submission(req, res, next){
 function remove_submission(req, res, next){
 	log.message(log.INFO, "got remove_submission");
 	
-	// todo: delete specified submission from JSFS
+	// todo: delete specified submission
 	
 	// todo: update submission index
 	
@@ -249,7 +198,7 @@ function jurors_list(req, res, next){
 function create_juror(req, res, next){
 	log.message(log.INFO, "got create_juror");
 	
-	// todo: store juror in JSFS
+	// todo: store juror
 	
 	// todo: update juror index
 	
@@ -261,7 +210,7 @@ function create_juror(req, res, next){
 function update_juror(req, res, next){
 	log.message(log.INFO, "got update_juror");
 	
-	// todo: store updated juror in JSFS
+	// todo: store updated juror
 	
 	return next;
 }
@@ -269,7 +218,7 @@ function update_juror(req, res, next){
 function remove_juror(req, res, next){
 	log.message(log.INFO, "got remove_juror");
 	
-	// todo: delete specified juror from JSFS
+	// todo: delete specified juror
 	
 	// todo: update juror index
 	
@@ -288,7 +237,7 @@ function reviews_list(req, res, next){
 function create_review(req, res, next){
 	log.message(log.INFO, "got create_review");
 	
-	// todo: store review in JSFS
+	// todo: store review
 	
 	// todo: update review index
 	
@@ -300,7 +249,7 @@ function create_review(req, res, next){
 function update_review(req, res, next){
 	log.message(log.INFO, "got update_review");
 	
-	// todo: store updated review in JSFS
+	// todo: store updated review
 	
 	return next;
 }
@@ -308,7 +257,7 @@ function update_review(req, res, next){
 function remove_review(req, res, next){
 	log.message(log.INFO, "got remove_review");
 	
-	// todo: delete specified review from JSFS
+	// todo: delete specified review
 	
 	// todo: update review index
 	
@@ -320,31 +269,14 @@ function send_notification(req, res, next){
 
 	var notification = req.body.notification;
 
-  var recipient = notification.recipient;
-  var subject = notification.subject;
-  var message = notification.message;
+	var recipient = notification.recipient;
+	var subject = notification.subject;
+	var message = notification.message;
 
 	send_email(recipient, subject, message);
 
 	res.send(200);
 	return next;
-
-};
-
-function send_test_notification(req, res, next){
-  log.message(log.INFO, "got send_notification");
-
-  var notification = req.body.notification;
-
-  var recipient = notification.recipient;
-  var subject = "Capital City Records submission confirmed!"; 
-  var message = "<p><p>Hello,<p>Thanks for your submission to Capital City Records. Your tracks and information have been uploaded for jury review.<p>We will follow up with you a few weeks after the submission period closes. For more information about Capital City Records see our FAQ at <a href=http://www.capitalcityrecords.ca/about>http://www.capitalcityrecords.ca/about</a><p>Thanks much,<br>Capital City Records<br><br>--&nbsp;<br>http://capitalcityrecords.ca/<br>localmusic@epl.ca";
-
-  send_email(recipient, subject, message);
-
-  res.send(200);
-  return next;
-
 };
 
 function send_email(recipient, subject, message){
@@ -404,7 +336,6 @@ server.post({path:"/reviews", version: "1.0.0"}, create_review);
 server.put({path:"/reviews", version: "1.0.0"}, update_review);
 //server.delete({path:"/reviews", version: "1.0.0"}, remove_review);
 
-//server.post({path:"/testnotification",version:"1.0.0"}, send_test_notification);
 //server.post({path:"/notifications",version:"1.0.0"}, send_notification);
 
 server.get({path:"/genres",version:"1.0.0"}, genres_list);
