@@ -69,7 +69,7 @@ server.on('MethodNotAllowed', unknownMethodHandler);
 function genres_list(req, res, next){
 	log.message(log.INFO, "got genres_list");
 
-	var genres = ["Blues","Classical","Country","Dance & Electronic","Folk","Instrumental","Jazz","Pop","Rap & Hip Hop","Rock","Spiritual"];
+	var genres = ["Blues","Classical","Country","Dance & Electronic","Folk","Instrumental","Jazz","Pop","Rap & Hip Hop","Rock","Spiritual","World Music"];
 
 	res.send(genres);
 	return next;
@@ -272,7 +272,7 @@ function send_notification(req, res, next){
 
 	if(notification.keyring){
 
-		// make sure the keyring exists
+		// make sure the keyring exists todo: turn this back on when we have a validation endpoint to call...
 //		http.get("http://jsfs.murfie.com/keyrings/" + notification.keyring, function(resp){
 //			if(resp.statusCode === 200){
 
