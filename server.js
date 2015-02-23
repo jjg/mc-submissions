@@ -21,6 +21,7 @@
 // includes
 var restify = require("restify");
 var nodemailer = require("nodemailer");
+var http = require("http");
 
 // configure
 var config = require('./config.js');
@@ -269,15 +270,38 @@ function send_notification(req, res, next){
 
 	var notification = req.body.notification;
 
-	var recipient = notification.recipient;
-	var subject = notification.subject;
-	var message = notification.message;
+	if(notification.keyring){
 
-	send_email(recipient, subject, message);
+		// make sure the keyring exists
+//		http.get("http://jsfs.murfie.com/keyrings/" + notification.keyring, function(resp){
+//			if(resp.statusCode === 200){
 
-	res.send(200);
-	return next;
-};
+				log.message(log.INFO,"keyring valid");
+
+				var recipient = notification.recipient;
+				var subject = notification.subject;
+				var message = notification.message;
+
+				send_email(recipient, subject, message);
+
+				res.send(200);
+//			} else {
+//				log.message(log.ERROR,"keyring invalid, http status: " + resp.statusCode);
+//				res.send(401,"valid keyring required to send notification via this service");
+//			}
+			return next;
+//		}).on("error", function(e){
+//			log.message(log.ERROR, "error validating keyring: " + e);
+//			res.send(500,"error validating keyring");
+//			return next;
+//		});
+
+	} else {
+		log.message(log.WARN, "no keyring specified");
+		res.send(401,"keyring required to send notification via this service");
+		return next;
+	}
+}
 
 function send_email(recipient, subject, message){
 
@@ -336,7 +360,7 @@ server.post({path:"/reviews", version: "1.0.0"}, create_review);
 server.put({path:"/reviews", version: "1.0.0"}, update_review);
 //server.delete({path:"/reviews", version: "1.0.0"}, remove_review);
 
-//server.post({path:"/notifications",version:"1.0.0"}, send_notification);
+server.post({path:"/notifications",version:"1.0.0"}, send_notification);
 
 server.get({path:"/genres",version:"1.0.0"}, genres_list);
 
