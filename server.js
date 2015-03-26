@@ -171,10 +171,23 @@ function create_submission(req, res, next){
 
 function update_submission(req, res, next){
 	log.message(log.INFO, "got update_submission");
-	
-	// todo: store updated submission
-	
-	return next;
+    log.message(log.INFO,JSON.stringify(req.body.submission));
+
+    // update submission in REDIS
+    var submission = req.body.submission;
+    redis.set("submission:" + submission.slug, JSON.stringify(submission), function(err, value){
+
+        if(err){
+            log.message(log.ERROR,err);
+            res.send(500,err);
+            return next;
+        }
+
+        log.message(log.INFO,value);
+
+		res.send(200,value);
+		return next;
+	});	
 }
 
 function remove_submission(req, res, next){
@@ -346,7 +359,7 @@ function send_email(recipient, subject, message){
 // REST interface endpoints
 server.get({path:"/submissions",version:"1.0.0"}, submissions_list);
 server.post({path:"/submissions", version: "1.0.0"}, create_submission);
-server.put({path:"/submissions", version: "1.0.0"}, update_submission);
+server.put({path:"/submissions/:slug", version: "1.0.0"}, update_submission);
 server.get({path:"/submissions/:slug", version: "1.0.0"}, get_submission);
 //server.delete({path:"/submissions", version: "1.0.0"}, remove_submission);
 
